@@ -13,24 +13,24 @@
 ## 环境要求
 
 - Node.js 16+
-- pnpm
+- yarn
 - Chrome 浏览器 (用于 Puppeteer)
 
 ## 安装
 
 ```bash
 # 安装依赖
-$ pnpm install
+$ yarn install
 ```
 
 ## 运行
 
 ```bash
 # 开发模式
-$ pnpm run start:dev
+$ yarn run start:dev
 
 # 生产模式
-$ pnpm run start:prod
+$ yarn run start:prod
 ```
 
 ## API 使用说明
