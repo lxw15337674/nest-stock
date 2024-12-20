@@ -51,14 +51,19 @@ WORKDIR /app
 # 复制 package.json
 COPY package*.json ./
 
+# 复制 tsconfig.json
+COPY tsconfig.json ./
+
 # 使用 yarn 安装依赖
 RUN yarn --frozen-lockfile
-# 打包
-RUN yarn run build
+
 # 复制其余文件
 COPY . .
+
+# 打包
+RUN yarn run build
 
 EXPOSE 443
 
 # 使用 yarn 运行应用
-CMD ["yarn","run","start:prod"]
+CMD ["yarn", "run", "start:prod"]
