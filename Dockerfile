@@ -54,7 +54,7 @@ COPY package*.json ./
 # 使用 yarn 安装依赖
 RUN yarn --frozen-lockfile
 # 打包
-RUN cd /app && rm -rf /app/dist && yarn run build
+RUN yarn run build
 # 复制其余文件
 COPY . .
 
