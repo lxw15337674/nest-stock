@@ -3,11 +3,11 @@ import { getFutuStockMap, getYuntuStockMap, MapType } from './stockThermalMap';
 
 @Injectable()
 export class AppService {
-  async getFutuStockMap(symbol: string, mapType: MapType): Promise<string> {
-    return await getFutuStockMap(symbol, mapType);
+  async getFutuStockMap(area: string, mapType: string): Promise<string> {
+    return await getFutuStockMap(area, mapType);
   }
 
-  async getYuntuStockMap(symbol: string): Promise<string> {
-    return await getYuntuStockMap(symbol);
+  async getYuntuStockMap(): Promise<string> {
+    return await getYuntuStockMap();
   }
 }

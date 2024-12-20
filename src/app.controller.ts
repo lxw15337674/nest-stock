@@ -6,8 +6,11 @@ import { MapType } from './stockThermalMap';
 
 @Controller()
 export class AppController {
-  constructor(private readonly appService: AppService) {}
-
+  constructor(private readonly appService: AppService) { }
+  @Get()
+  getHello(): string {
+    return 'Hello World!';
+  }
   @Get('/getFutuStockMap/:symbol/:mapType')
   async getFutuStockMap(
     @Param('symbol') symbol: string,
@@ -23,12 +26,11 @@ export class AppController {
     return file.pipe(res);
   }
 
-  @Get('/getYuntuStockMap/:symbol')
+  @Get('/getYuntuStockMap')
   async getYuntuStockMap(
-    @Param('symbol') symbol: string,
     @Res() res: Response,
   ) {
-    const filePath = await this.appService.getYuntuStockMap(symbol);
+    const filePath = await this.appService.getYuntuStockMap();
     if (filePath.includes('正在进行中')) {
       return res.send(filePath);
     }

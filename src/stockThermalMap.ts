@@ -1,15 +1,19 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
-import path from 'path';
+import * as path from 'path';
 import { randomSleep } from './utils/sleep';
 import fs from 'fs';
 
-enum MapType {
+export enum MapType {
     hy = 'hy',
     gu = 'gu'
 }
-
+export enum Area {
+    'hk' = 'hk',
+    'us' = 'us',
+    'cn' = 'cn'
+}
 const config = {
-    headless: true,
+    headless: false,
     args: ['--no-sandbox',           // Docker 环境必需
         '--disable-setuid-sandbox', // 配合 no-sandbox
     ]
@@ -32,8 +36,8 @@ async function getPage(): Promise<Page> {
     return page;
 }
 
-async function getFutuStockMap(symbol: string, mapType: MapType) {
-    const filePath = path.resolve(process.cwd(), `map/futu-${symbol}-${mapType}.png`);
+async function getFutuStockMap(area: string, mapType: string) {
+    const filePath = path.resolve(process.cwd(), `map/futu-${area}-${mapType}.png`);
 
     if (isProcessing) {
         // 检查文件是否存在
@@ -45,13 +49,19 @@ async function getFutuStockMap(symbol: string, mapType: MapType) {
 
     try {
         isProcessing = true;
-        mapType = mapType || MapType.hy;
+
+        // 参数校验
+        if (!Object.values(Area).includes(area as Area)) {
+            area = Area.cn;
+        }
+        if (!Object.values(MapType).includes(mapType as MapType)) {
+            mapType = MapType.gu;
+        }
 
         const currentPage = await getPage();
-        await currentPage.goto(`https://www.futunn.com/quote/${symbol}/heatmap`, {
+        await currentPage.goto(`https://www.futunn.com/quote/${area}/heatmap`, {
             waitUntil: 'networkidle2'
         });
-
         if (mapType === MapType.hy) {
             await currentPage.click('.select-component.heatmap-list-select');
             await currentPage.evaluate(() => {
@@ -59,21 +69,18 @@ async function getFutuStockMap(symbol: string, mapType: MapType) {
                 (parentElement?.children[1] as HTMLElement)?.click();
             });
         }
-
-        await randomSleep(3000, 4000);
+        await randomSleep(2000, 3000);
         let view = await currentPage.$('.quote-page.router-page');
         await view.screenshot({ path: filePath });
         console.log(`截图成功: ${filePath}`);
-
         return filePath;
     } finally {
         isProcessing = false;
     }
 }
 
-// 这个功能会导致意外退出，暂时不用
-async function getYuntuStockMap(symbol: string) {
-    const filePath = path.resolve(process.cwd(), `map/yuntu-${symbol}.png`);
+async function getYuntuStockMap() {
+    const filePath = path.resolve(process.cwd(), `map/yuntu.png`);
 
     if (isProcessing) {
         // 检查文件是否存在
@@ -101,4 +108,4 @@ async function getYuntuStockMap(symbol: string) {
     }
 }
 
-export { getFutuStockMap, MapType, getYuntuStockMap };
+export { getFutuStockMap, getYuntuStockMap };
