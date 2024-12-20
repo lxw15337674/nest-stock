@@ -1,7 +1,5 @@
 import puppeteer, { Browser, Page } from 'puppeteer';
-import * as path from 'path';
 import { randomSleep } from './utils/sleep';
-import fs from 'fs';
 
 export enum MapType {
     hy = 'hy',
