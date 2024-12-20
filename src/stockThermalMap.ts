@@ -22,6 +22,29 @@ let browser: Browser | null = null;
 let page: Page | null = null;
 let isProcessing = false;
 
+// 缓存变量
+interface CacheData {
+    buffer: Buffer;
+    updateTime: number;
+}
+
+interface StockMapCache {
+    [key: string]: CacheData;
+}
+
+let stockMapCache: StockMapCache = {};
+const CACHE_EXPIRE_TIME = 2 * 60 * 1000; // 2分钟缓存过期
+
+// 清理过期缓存
+function clearExpiredCache() {
+    const now = Date.now();
+    Object.keys(stockMapCache).forEach(key => {
+        if (now - stockMapCache[key].updateTime > CACHE_EXPIRE_TIME) {
+            delete stockMapCache[key];
+        }
+    });
+}
+
 async function getPage(): Promise<Page> {
     if (!browser) {
         browser = await puppeteer.launch(config);
@@ -36,19 +59,22 @@ async function getPage(): Promise<Page> {
     return page;
 }
 
-async function getFutuStockMap(area: string, mapType: string) {
-    const filePath = path.resolve(process.cwd(), `map/futu-${area}-${mapType}.png`);
+async function getFutuStockMap(area: string, mapType: string): Promise<Buffer > {
+    const cacheKey = `futu-${area}-${mapType}`;
+    const now = Date.now();
+
+    // 检查缓存
+    if (stockMapCache[cacheKey] && now - stockMapCache[cacheKey].updateTime < CACHE_EXPIRE_TIME) {
+        return stockMapCache[cacheKey].buffer;
+    }
 
     if (isProcessing) {
-        // 检查文件是否存在
-        if (fs.existsSync(filePath)) {
-            return filePath;
-        }
-        return '另一个截图任务正在进行中...';
+        return stockMapCache[cacheKey].buffer;
     }
 
     try {
         isProcessing = true;
+        clearExpiredCache();
 
         // 参数校验
         if (!Object.values(Area).includes(area as Area)) {
@@ -71,27 +97,34 @@ async function getFutuStockMap(area: string, mapType: string) {
         }
         await randomSleep(2000, 3000);
         let view = await currentPage.$('.quote-page.router-page');
-        await view.screenshot({ path: filePath });
-        console.log(`截图成功: ${filePath}`);
-        return filePath;
+        const buffer = await view.screenshot() as Buffer;
+        stockMapCache[cacheKey] = {
+            buffer,
+            updateTime: now
+        };
+        console.log('截图成功，已更新缓存');
+        return buffer;
     } finally {
         isProcessing = false;
     }
 }
 
-async function getYuntuStockMap() {
-    const filePath = path.resolve(process.cwd(), `map/yuntu.png`);
+async function getYuntuStockMap(): Promise<Buffer | null> {
+    const cacheKey = 'yuntu';
+    const now = Date.now();
+
+    // 检查缓存
+    if (stockMapCache[cacheKey] && now - stockMapCache[cacheKey].updateTime < CACHE_EXPIRE_TIME) {
+        return stockMapCache[cacheKey].buffer;
+    }
 
     if (isProcessing) {
-        // 检查文件是否存在
-        if (fs.existsSync(filePath)) {
-            return filePath;
-        }
-        return '另一个截图任务正在进行中...';
+        return stockMapCache[cacheKey]?.buffer;
     }
 
     try {
         isProcessing = true;
+        clearExpiredCache();
 
         const currentPage = await getPage();
         await currentPage.goto(`https://dapanyuntu.com/`, {
@@ -100,9 +133,13 @@ async function getYuntuStockMap() {
 
         await randomSleep(3000, 4000);
         let view = await currentPage.$('#body');
-        await view.screenshot({ path: filePath });
-        console.log(`截图成功: ${filePath}`);
-        return filePath;
+        const buffer = await view.screenshot() as Buffer;
+        stockMapCache[cacheKey] = {
+            buffer,
+            updateTime: now
+        };
+        console.log('截图成功，已更新缓存');
+        return buffer;
     } finally {
         isProcessing = false;
     }
