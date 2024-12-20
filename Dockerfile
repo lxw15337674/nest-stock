@@ -58,7 +58,7 @@ RUN cd /app && rm -rf /app/dist && yarn run build
 # 复制其余文件
 COPY . .
 
-EXPOSE 80
+EXPOSE 443
 
 # 使用 yarn 运行应用
 CMD ["yarn","run","start:prod"]
