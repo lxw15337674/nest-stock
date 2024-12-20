@@ -63,7 +63,7 @@ COPY . .
 # 打包
 RUN yarn run build
 
-EXPOSE 443
-
 # 使用 yarn 运行应用
 CMD ["yarn", "run", "start:prod"]
+
+EXPOSE 443
