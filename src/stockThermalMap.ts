@@ -11,7 +11,7 @@ export enum Area {
     'cn' = 'cn'
 }
 const config = {
-    headless: false,
+    headless: true,
     args: ['--no-sandbox',           // Docker 环境必需
         '--disable-setuid-sandbox', // 配合 no-sandbox
     ]
