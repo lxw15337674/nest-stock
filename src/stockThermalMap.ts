@@ -57,21 +57,24 @@ async function getPage(): Promise<Page> {
     return page;
 }
 
-async function getFutuStockMap(area: string, mapType: string): Promise<Buffer > {
+async function getFutuStockMap(area: string, mapType: string): Promise<Buffer> {
     const cacheKey = `futu-${area}-${mapType}`;
     const now = Date.now();
 
     // 检查缓存
     if (stockMapCache[cacheKey] && now - stockMapCache[cacheKey].updateTime < CACHE_EXPIRE_TIME) {
+        console.log(`[${new Date().toLocaleString()}] 命中缓存: Futu ${area}-${mapType}`);
         return stockMapCache[cacheKey].buffer;
     }
 
     if (isProcessing) {
+        console.log(`[${new Date().toLocaleString()}] 正在处理中，返回旧缓存: Futu ${area}-${mapType}`);
         return stockMapCache[cacheKey].buffer;
     }
 
     try {
         isProcessing = true;
+        console.log(`[${new Date().toLocaleString()}] 开始获取 Futu 行情图: ${area}-${mapType}`);
         clearExpiredCache();
 
         // 参数校验
@@ -100,8 +103,11 @@ async function getFutuStockMap(area: string, mapType: string): Promise<Buffer > 
             buffer,
             updateTime: now
         };
-        console.log('截图成功，已更新缓存');
+        console.log(`[${new Date().toLocaleString()}] Futu 行情图更新成功: ${area}-${mapType}`);
         return buffer;
+    } catch (error) {
+        console.error(`[${new Date().toLocaleString()}] Futu 行情图获取失败:`, error);
+        throw error;
     } finally {
         isProcessing = false;
     }
@@ -111,17 +117,19 @@ async function getYuntuStockMap(): Promise<Buffer | null> {
     const cacheKey = 'yuntu';
     const now = Date.now();
 
-    // 检查缓存
     if (stockMapCache[cacheKey] && now - stockMapCache[cacheKey].updateTime < CACHE_EXPIRE_TIME) {
+        console.log(`[${new Date().toLocaleString()}] 命中缓存: 云图`);
         return stockMapCache[cacheKey].buffer;
     }
 
     if (isProcessing) {
+        console.log(`[${new Date().toLocaleString()}] 正在处理中，返回旧缓存: 云图`);
         return stockMapCache[cacheKey]?.buffer;
     }
 
     try {
         isProcessing = true;
+        console.log(`[${new Date().toLocaleString()}] 开始获取云图行情`);
         clearExpiredCache();
 
         const currentPage = await getPage();
@@ -129,15 +137,18 @@ async function getYuntuStockMap(): Promise<Buffer | null> {
             waitUntil: 'networkidle2'
         });
 
-        await randomSleep(3000, 4000);
+        await randomSleep(4000, 6000);
         let view = await currentPage.$('#body');
         const buffer = await view.screenshot() as Buffer;
         stockMapCache[cacheKey] = {
             buffer,
             updateTime: now
         };
-        console.log('截图成功，已更新缓存');
+        console.log(`[${new Date().toLocaleString()}] 云图行情更新成功`);
         return buffer;
+    } catch (error) {
+        console.error(`[${new Date().toLocaleString()}] 云图获取失败:`, error);
+        throw error;
     } finally {
         isProcessing = false;
     }
