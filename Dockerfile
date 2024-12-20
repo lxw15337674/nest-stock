@@ -63,7 +63,7 @@ COPY . .
 # 打包
 # RUN yarn run build
 
-EXPOSE 6060
+EXPOSE 8080
 
 
 # 使用 yarn 运行应用
